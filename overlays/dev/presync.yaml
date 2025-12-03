@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-sync-job
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+spec:
+  template:
+    spec:
+      containers:
+      - name: pre-sync
+        image: busybox
+        command: ["sh", "-c", "echo PreSync job running...; sleep 5"]
+      restartPolicy: Never
+  backoffLimit: 3
+
