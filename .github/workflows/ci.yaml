@@ -1,0 +1,17 @@
+name: CI
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Lint DEV manifests
+      run: kubectl kustomize ./overlays/dev
+    - name: Lint PROD manifests
+      run: kubectl kustomize ./overlays/prod
+
