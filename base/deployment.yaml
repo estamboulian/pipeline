@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  replicas: 1                  # Peut être patché dans dev/prod
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:latest   # Peut être patché dans overlays
+          ports:
+            - containerPort: 80
+          env:
+            - name: ENV
+              value: "base"     # Peut être patché dans overlays
