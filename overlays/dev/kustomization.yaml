@@ -1,5 +1,5 @@
 resources:
   - ../../base
-  - pre-sync-job.yaml
+  - presync.yaml
 namePrefix: dev-
 
