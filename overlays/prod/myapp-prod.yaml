@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/estamboulian/pipeline.git'
     targetRevision: main
-    path: overlays/dev
+    path: overlays/prod
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: default
