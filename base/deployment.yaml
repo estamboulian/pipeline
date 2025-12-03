@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
+  name: nginx
   labels:
-    app: myapp
+    app: nginx
 spec:
   replicas: 1                  # Peut être patché dans dev/prod
   selector:
     matchLabels:
-      app: myapp
+      app: nginx
   template:
     metadata:
       labels:
-        app: myapp
+        app: nginx
     spec:
       containers:
-        - name: myapp
+        - name: nginx
           image: nginx:latest   # Peut être patché dans overlays
           ports:
             - containerPort: 80
