@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: myapp:latest   # Peut être patché dans overlays
+          image: nginx:latest   # Peut être patché dans overlays
           ports:
             - containerPort: 80
           env:
