@@ -72,3 +72,7 @@ NAME        STATUS        WEIGHT   LASTTRANSITIONTIME
 nginx-dev   Initialized   0        2025-12-04T10:15:59Z
 ```
 
+## 5. Auteurs
+* **Édouard Stamboulian** — [GitHub de Édouard](https://github.com/estamboulian)  
+* **Ahmed Khairi** — [GitHub de Ahmed](https://github.com/hirlho)  
+
