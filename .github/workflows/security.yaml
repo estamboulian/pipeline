@@ -13,22 +13,23 @@ jobs:
         uses: actions/checkout@v3
 
       # -------------------------------------------------------------
-      # Etape 1 : Scan des fichiers (Secrets + Config K8s)
+      # Etape 1 : C'est ICI qu'on scanne les SECRETS et la config
       # -------------------------------------------------------------
-      - name: Scan du repo (Secrets + Config)
+      - name: Scan des fichiers (Secrets + Config)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
+          scan-ref: '.'
+          # On active explicitement le scanner de 'secret'
+          scanners: 'secret,misconfig'
           ignore-unfixed: true
           format: 'table'
-          exit-code: '1' # Bloque le pipeline si secret ou grosse faille config
+          exit-code: '1' # Ca bloque le pipeline si un secret est trouvé
           severity: 'CRITICAL,HIGH'
 
       # -------------------------------------------------------------
-      # Etape 2 : Scan des images Docker référencées
+      # Etape 2 : Scan des vulnérabilités des images utilisées
       # -------------------------------------------------------------
-      
-      # Installation manuelle de Trivy pour le script bash
       - name: Install Trivy
         run: |
           sudo apt-get install wget apt-transport-https gnupg lsb-release
@@ -41,10 +42,7 @@ jobs:
         run: |
           echo "Recherche des images..."
           
-          # 1. grep -rh : Recherche récursive sans afficher le nom du fichier (-h)
-          # 2. --exclude-dir : On ignore les dossiers caches et git
-          # 3. sed 's/#.*//' : On enlève les commentaires en fin de ligne (FIX du problème nginx)
-          # 4. awk '{print $NF}' : On prend le dernier mot de la ligne (le nom de l'image)
+          # On cherche "image:", on ignore le dossier cache et les commentaires (#)
           grep -rh "image:" . --exclude-dir={.git,.github,.cache} | sed 's/#.*//' | awk '{print $NF}' | tr -d '"' | tr -d "'" | sort | uniq | sed '/^$/d' > liste_images.txt
 
           echo "--------------------------------"
@@ -52,19 +50,15 @@ jobs:
           cat liste_images.txt
           echo "--------------------------------"
 
-          # Si aucune image n'est trouvée, on ne plante pas le script
           if [ ! -s liste_images.txt ]; then
-            echo "Aucune image trouvée, tout va bien."
+            echo "Aucune image trouvée."
             exit 0
           fi
 
-          # Boucle sur chaque image trouvée
           while read image; do
-              # Petite sécurité pour être sûr que la chaine n'est pas vide
               if [[ -n "$image" ]]; then
                   echo "🛡️  Scan de l'image : $image ..."
-                  # On scanne uniquement les vulnérabilités (pas les secrets car déjà fait en étape 1)
-                  # exit-code 1 fait échouer le pipeline si critique
+                  # Scan des CVE sur l'image
                   trivy image --scanners vuln --severity CRITICAL --exit-code 1 "$image"
               fi
           done < liste_images.txt
