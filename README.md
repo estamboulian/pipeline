@@ -1,0 +1,29 @@
+# Projet déploiement CI/CD dans Kubernetes
+
+
+## 1. Architecture du Projet (Kustomize)
+
+Le dépôt est structuré selon le modèle standard **Base / Overlays** pour éviter la duplication de code.
+
+```text
+.
+├── .github/workflows/
+│   └── security.yml       # Pipeline CI (Trivy : Scan Secrets & Images)
+├── base/                  # Configuration de base (Commune)
+│   ├── deployment.yaml    # Déploiement de l'application Nginx
+│   ├── service.yaml       # Service pour exposer l'app
+│   └── kustomization.yaml # Point d'entrée Kustomize Base
+├── overlays/              # Environnements spécifiques
+│   ├── dev/
+│   │   ├── kustomization.yaml
+│   │   ├── nginx-dev.yaml   # Patch : Configuration légère pour le dév
+│   │   ├── secret-dev.yaml  # Secrets pour le dév (Test détection Trivy)
+│   │   └── presync.yaml     # Hook ArgoCD : Job exécuté avant la synchro
+│   └── prod/
+│       ├── kustomization.yaml
+│       ├── nginx-prod.yaml  # Patch : Haute dispo pour la prod
+│       └── secret-prod.yaml # Secrets pour la prod
+└── README.md
+```
+## 2. Le Déploiement Continu (CD) avec ArgoCD
+
