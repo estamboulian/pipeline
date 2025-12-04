@@ -2,4 +2,5 @@ resources:
   - ../../base
   - presync.yaml
 namePrefix: dev-
-
+patchesStrategicMerge:
+  - services-dev.yaml
