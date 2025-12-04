@@ -1,5 +1,7 @@
 resources:
   - ../../base
   - secret-prod.yaml
-  - replicas.yaml
 namePrefix: prod-
+
+patches:
+  - replicas.yaml
