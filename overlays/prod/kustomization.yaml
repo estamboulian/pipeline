@@ -2,5 +2,5 @@ resources:
   - ../../base
 
 namePrefix: prod-
-patchesStrategicMerge:
-  -  services-prod.yaml
+patches:
+  -  path: services-prod.yaml
