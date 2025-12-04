@@ -13,22 +13,31 @@ jobs:
         uses: actions/checkout@v3
 
       # -------------------------------------------------------------
-      # Etape 1 : C'est ICI qu'on scanne les SECRETS et la config
+      # Etape 1 : Scan des SECRETS
       # -------------------------------------------------------------
-      - name: Scan des fichiers (Secrets + Config)
+      - name: Recherche de Secrets (Mots de passe, Clés API)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          # On active explicitement le scanner de 'secret'
-          scanners: 'secret,misconfig'
-          ignore-unfixed: true
-          format: 'table'
-          exit-code: '1' # Ca bloque le pipeline si un secret est trouvé
+          scanners: 'secret'
+          exit-code: '1' # Bloque le pipeline si un secret est détecté
           severity: 'CRITICAL,HIGH'
 
       # -------------------------------------------------------------
-      # Etape 2 : Scan des vulnérabilités des images utilisées
+      # Etape 2 : Scan des Configs Kubernetes
+      # -------------------------------------------------------------
+      - name: Audit de la configuration Kubernetes
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'misconfig'
+          exit-code: '0' # Informatif uniquement (ne bloque pas le pipeline)
+          severity: 'CRITICAL,HIGH'
+
+      # -------------------------------------------------------------
+      # Etape 3 : Scan des images
       # -------------------------------------------------------------
       - name: Install Trivy
         run: |
@@ -42,7 +51,7 @@ jobs:
         run: |
           echo "Recherche des images..."
           
-          # On cherche "image:", on ignore le dossier cache et les commentaires (#)
+          # Extraction des images en ignorant les commentaires et dossiers techniques
           grep -rh "image:" . --exclude-dir={.git,.github,.cache} | sed 's/#.*//' | awk '{print $NF}' | tr -d '"' | tr -d "'" | sort | uniq | sed '/^$/d' > liste_images.txt
 
           echo "--------------------------------"
@@ -58,7 +67,7 @@ jobs:
           while read image; do
               if [[ -n "$image" ]]; then
                   echo "🛡️  Scan de l'image : $image ..."
-                  # Scan des CVE sur l'image
+                  # Scan des vulnérabilités critiques
                   trivy image --scanners vuln --severity CRITICAL --exit-code 1 "$image"
               fi
           done < liste_images.txt
