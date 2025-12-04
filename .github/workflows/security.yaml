@@ -1,0 +1,50 @@
+name: Pipeline Securité
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  test-securite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v3
+
+      # Partie 1 : On utilise l'action officielle pour scanner les fichiers
+      # Ça va vérifier s'il y a des mots de passe ou des mauvaises configs k8s
+      - name: Scan du repo (Secrets + Config)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '1' # Ca fail le job si ça trouve des trucs graves
+          severity: 'CRITICAL,HIGH'
+
+      # Partie 2 : On installe Trivy en ligne de commande pour scanner les images
+      # C'est plus simple pour faire une boucle après
+      - name: Install Trivy
+        run: |
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Scan des images Docker utilisées
+        run: |
+          # Je cherche toutes les lignes avec "image:" dans mes fichiers yaml
+          # Et je nettoie pour garder que le nom de l'image
+          grep -r "image:" . | awk '{print $2}' | tr -d '"' | sort | uniq > liste_images.txt
+
+          echo "Liste des images trouvées :"
+          cat liste_images.txt
+
+          # Je boucle sur chaque image pour lancer le scan
+          while read image; do
+              echo "Scan de l'image $image ..."
+              # Si trivy trouve une faille critique, le pipeline s'arrête
+              trivy image --severity CRITICAL --exit-code 1 $image
+          done < liste_images.txt
