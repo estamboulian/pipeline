@@ -2,6 +2,8 @@ resources:
   - ../../base
   - secret-prod.yaml
 namePrefix: prod-
-
 patches:
-  - replicas.yaml
+  - path: replicas.yaml
+    target:
+      kind: Deployment
+      name: nginx
