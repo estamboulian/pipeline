@@ -27,3 +27,5 @@ Le dépôt est structuré selon le modèle standard **Base / Overlays** pour év
 ```
 ## 2. Le Déploiement Continu (CD) avec ArgoCD
 
+![image](images/image_namespace_dev.png)
+
