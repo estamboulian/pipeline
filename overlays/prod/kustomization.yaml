@@ -2,5 +2,3 @@ resources:
   - ../../base
 
 namePrefix: prod-
-patches:
-  -  path: services-prod.yaml

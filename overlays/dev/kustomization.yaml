@@ -2,5 +2,3 @@ resources:
   - ../../base
   - presync.yaml
 namePrefix: dev-
-patches:
-  - path: services-dev.yaml
