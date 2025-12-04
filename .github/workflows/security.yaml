@@ -21,14 +21,12 @@ jobs:
           scan-type: 'fs'
           ignore-unfixed: true
           format: 'table'
-          exit-code: '1' # Bloque le pipeline si secret ou grosse faille config
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
       # -------------------------------------------------------------
       # Etape 2 : Scan des images Docker référencées
       # -------------------------------------------------------------
-      
-      # On installe Trivy manuellement (ça fait plus "authentique")
       - name: Install Trivy
         run: |
           sudo apt-get install wget apt-transport-https gnupg lsb-release
@@ -41,30 +39,25 @@ jobs:
         run: |
           echo "Recherche des images..."
           
-          # La commande magique corrigée :
-          # 1. On cherche "image:"
-          # 2. --exclude-dir : On interdit d'aller fouiller dans .git et .cache (là où ça plantait)
-          # 3. grep -v "#" : On ignore les lignes commentées
-          # 4. awk/tr/sed : On nettoie pour garder juste le nom de l'image
-          grep -r "image:" . --exclude-dir={.git,.github,.cache} | grep -v "#" | awk '{print $2}' | tr -d '"' | tr -d "'" | sort | uniq | sed '/^$/d' > liste_images.txt
+          # CORRECTION MAJEURE ICI :
+          # 1. grep -rh : le 'h' masque le nom du fichier pour ne pas décaler les colonnes
+          # 2. awk '{print $NF}' : On prend le DERNIER mot de la ligne (l'image) plutôt que le 2ème
+          grep -rh "image:" . --exclude-dir={.git,.github,.cache} | grep -v "#" | awk '{print $NF}' | tr -d '"' | tr -d "'" | sort | uniq | sed '/^$/d' > liste_images.txt
 
           echo "--------------------------------"
           echo "Liste des images trouvées :"
           cat liste_images.txt
           echo "--------------------------------"
 
-          # Petite sécurité : si le fichier est vide, on quitte proprement
           if [ ! -s liste_images.txt ]; then
             echo "Aucune image trouvée, tout va bien."
             exit 0
           fi
 
-          # On boucle sur chaque image
           while read image; do
-              # Sécurité supplémentaire pour éviter de scanner des trucs bizarres
-              if [[ "$image" != \#* ]]; then
+              # On ignore si la ligne trouvée est juste "image:" (cas d'une ligne vide ou mal formée)
+              if [[ "$image" != "image:" ]] && [[ "$image" != \#* ]]; then
                   echo "🛡️  Scan de l'image : $image ..."
-                  # On lance le scan. Si c'est critique, ça exit 1 et le pipeline échoue.
                   trivy image --scanners vuln --severity CRITICAL --exit-code 1 "$image"
               fi
           done < liste_images.txt
