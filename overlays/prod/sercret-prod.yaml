@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nginx-sercret
+  namespace: prod
+type: Opaque
+data:
+  username: cHJvZFVzZXI=   # "prodUser" en base64
+  password: c2VjdXJlUGQ=   # "securePd" en base64
+
